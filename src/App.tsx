@@ -68,7 +68,7 @@ function App() {
     <div className="min-h-screen bg-gray-100">
       <div className="mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-4">PNG 图片排版工具</h1>
+          <h1 className="text-2xl font-bold mb-4">KIGLAND UV 眼片排版工具</h1>
           <div className="flex flex-col gap-4">
             <div className="flex gap-4">
               <div className="flex gap-4">

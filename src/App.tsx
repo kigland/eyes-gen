@@ -296,48 +296,50 @@ function App() {
         </div>
 
         {/* A4 预览区域 */}
-        <div 
-          ref={printAreaRef}
-          className={`bg-white mx-auto shadow-lg p-4`} 
-          style={{
-            width: `${paperConfig.width}mm`,
-            height: `${paperConfig.height}mm`
-          }}
-        >
-          <div className={`grid grid-cols-2 h-full gap-4`} style={{
-            gridTemplateRows: `repeat(${paperConfig.gridRows}, 1fr)`
-          }}>
-            {Array(paperConfig.gridRows * 2).fill(null).map((_, index) => {
-              const isLeftPosition = index % 2 === 0
-              const images = isLeftPosition ? leftImages : rightImages
-              const imageIndex = Math.floor(index / 2) % images.length
-              const image = images[imageIndex]
+        <div className={`bg-white mx-auto shadow-lg p-4`}>
+          <div 
+            ref={printAreaRef}
+            style={{
+              width: `${paperConfig.width}mm`,
+              height: `${paperConfig.height}mm`,
+              backgroundColor: '#ffffff'
+            }}
+          >
+            <div className={`grid grid-cols-2 h-full gap-4`} style={{
+              gridTemplateRows: `repeat(${paperConfig.gridRows}, 1fr)`
+            }}>
+              {Array(paperConfig.gridRows * 2).fill(null).map((_, index) => {
+                const isLeftPosition = index % 2 === 0
+                const images = isLeftPosition ? leftImages : rightImages
+                const imageIndex = Math.floor(index / 2) % images.length
+                const image = images[imageIndex]
 
-              return (
-                <div key={index} className="border border-gray-200 flex items-center justify-center relative">
-                  {image && (
-                    <>
-                      <img
-                        src={image.url}
-                        alt={`${isLeftPosition ? '左' : '右'}眼 ${imageIndex + 1}`}
-                        style={{
-                          width: `${image.width}mm`,
-                          height: `${image.height}mm`,
-                        }}
-                        className="object-fill"
-                      />
-                      <span className="absolute top-2 left-2 text-sm text-gray-500">
-                        {isLeftPosition ? '左' : '右'}眼 {imageIndex + 1}
-                        <br />
-                        <span className="text-xs">
-                          {image.width}×{image.height}mm
+                return (
+                  <div key={index} className="border border-gray-200 flex items-center justify-center relative">
+                    {image && (
+                      <>
+                        <img
+                          src={image.url}
+                          alt={`${isLeftPosition ? '左' : '右'}眼 ${imageIndex + 1}`}
+                          style={{
+                            width: `${image.width}mm`,
+                            height: `${image.height}mm`,
+                          }}
+                          className="object-fill"
+                        />
+                        <span className="absolute top-2 left-2 text-sm text-gray-500">
+                          {isLeftPosition ? '左' : '右'}眼 {imageIndex + 1}
+                          <br />
+                          <span className="text-xs">
+                            {image.width}×{image.height}mm
+                          </span>
                         </span>
-                      </span>
-                    </>
-                  )}
-                </div>
-              )
-            })}
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>

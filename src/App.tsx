@@ -14,8 +14,30 @@ interface ImageState {
   right: ImageConfig[];
 }
 
+type PaperSize = 'A4' | 'A5';
+
+interface PaperConfig {
+  width: number;
+  height: number;
+  gridRows: number;
+}
+
+const PAPER_CONFIGS: Record<PaperSize, PaperConfig> = {
+  'A4': {
+    width: 210,
+    height: 297,
+    gridRows: 4
+  },
+  'A5': {
+    width: 148,
+    height: 210,
+    gridRows: 2
+  }
+};
+
 function App() {
   const [images, setImages] = useState<ImageState>({ left: [], right: [] })
+  const [paperSize, setPaperSize] = useState<PaperSize>('A4')
   const leftEyeInputRef = useRef<HTMLInputElement>(null)
   const rightEyeInputRef = useRef<HTMLInputElement>(null)
 
@@ -62,6 +84,7 @@ function App() {
     window.print()
   }
 
+  const paperConfig = PAPER_CONFIGS[paperSize]
   const { left: leftImages, right: rightImages } = images
 
   return (
@@ -70,7 +93,7 @@ function App() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold mb-4">KIGLAND UV 眼片排版工具</h1>
           <div className="flex flex-col gap-4">
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <div className="flex gap-4">
                 <button
                   onClick={() => leftEyeInputRef.current?.click()}
@@ -98,6 +121,17 @@ function App() {
                   onChange={(e) => handleImageUpload('right', e)}
                   className="hidden"
                 />
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium">纸张大小:</label>
+                <select
+                  value={paperSize}
+                  onChange={(e) => setPaperSize(e.target.value as PaperSize)}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="A4">A4 (8张眼片)</option>
+                  <option value="A5">A5 (4张眼片)</option>
+                </select>
               </div>
               {(leftImages.length > 0 || rightImages.length > 0) && (
                 <button
@@ -217,9 +251,14 @@ function App() {
         </div>
 
         {/* A4 预览区域 */}
-        <div className="bg-white w-[210mm] h-[297mm] mx-auto shadow-lg p-4">
-          <div className="grid grid-cols-2 grid-rows-4 h-full gap-4">
-            {Array(8).fill(null).map((_, index) => {
+        <div className={`bg-white mx-auto shadow-lg p-4`} style={{
+          width: `${paperConfig.width}mm`,
+          height: `${paperConfig.height}mm`
+        }}>
+          <div className={`grid grid-cols-2 h-full gap-4`} style={{
+            gridTemplateRows: `repeat(${paperConfig.gridRows}, 1fr)`
+          }}>
+            {Array(paperConfig.gridRows * 2).fill(null).map((_, index) => {
               const isLeftPosition = index % 2 === 0
               const images = isLeftPosition ? leftImages : rightImages
               const imageIndex = Math.floor(index / 2) % images.length

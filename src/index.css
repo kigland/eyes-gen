@@ -90,5 +90,20 @@ button:focus-visible {
     margin: 0;
     padding: 0;
     box-shadow: none;
+    page-break-after: avoid;
+    -webkit-print-color-adjust: exact;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html, body {
+    height: 297mm;
+    width: 210mm;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
   }
 }

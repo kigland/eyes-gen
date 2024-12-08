@@ -88,17 +88,28 @@ button:focus-visible {
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none;
+    page-break-inside: avoid;
     page-break-after: avoid;
+    page-break-before: avoid;
     -webkit-print-color-adjust: exact;
   }
 
   @page {
     margin: 0;
+    size: auto;
   }
 
   html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    height: 100%;
+    page-break-after: avoid;
+  }
+
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
   }
 }

@@ -3,8 +3,19 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
+interface ImageConfig {
+  url: string;
+  width: number;
+  height: number;
+}
+
+interface ImageState {
+  left: ImageConfig[];
+  right: ImageConfig[];
+}
+
 function App() {
-  const [images, setImages] = useState<{ left?: string; right?: string }>({})
+  const [images, setImages] = useState<ImageState>({ left: [], right: [] })
   const leftEyeInputRef = useRef<HTMLInputElement>(null)
   const rightEyeInputRef = useRef<HTMLInputElement>(null)
 
@@ -17,19 +28,41 @@ function App() {
       if (e.target?.result) {
         setImages(prev => ({
           ...prev,
-          [eye]: e.target?.result as string
+          [eye]: [...prev[eye], {
+            url: e.target?.result as string,
+            width: 25, // 默认 25mm
+            height: 25, // 默认 25mm
+          }]
         }))
       }
     }
     reader.readAsDataURL(file)
   }
 
+  const handleRemoveImage = (eye: 'left' | 'right', index: number) => {
+    setImages(prev => ({
+      ...prev,
+      [eye]: prev[eye].filter((_, i) => i !== index)
+    }))
+  }
+
+  const handleSizeChange = (eye: 'left' | 'right', index: number, dimension: 'width' | 'height', value: string) => {
+    const numValue = parseFloat(value)
+    if (isNaN(numValue) || numValue <= 0) return
+
+    setImages(prev => ({
+      ...prev,
+      [eye]: prev[eye].map((img, i) => 
+        i === index ? { ...img, [dimension]: numValue } : img
+      )
+    }))
+  }
+
   const handlePrint = () => {
     window.print()
   }
 
-  // 转换为数组以便渲染
-  const imageArray = [images.left, images.right].filter(Boolean) as string[]
+  const { left: leftImages, right: rightImages } = images
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -43,7 +76,7 @@ function App() {
                   onClick={() => leftEyeInputRef.current?.click()}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
-                  选择左眼图片
+                  添加左眼图片
                 </button>
                 <input
                   ref={leftEyeInputRef}
@@ -56,7 +89,7 @@ function App() {
                   onClick={() => rightEyeInputRef.current?.click()}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
-                  选择右眼图片
+                  添加右眼图片
                 </button>
                 <input
                   ref={rightEyeInputRef}
@@ -66,7 +99,7 @@ function App() {
                   className="hidden"
                 />
               </div>
-              {(images.left || images.right) && (
+              {(leftImages.length > 0 || rightImages.length > 0) && (
                 <button
                   onClick={handlePrint}
                   className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
@@ -75,45 +108,148 @@ function App() {
                 </button>
               )}
             </div>
+
             {/* 预览区域 */}
-            {(images.left || images.right) && (
-              <div className="flex gap-4">
-                {images.left && (
-                  <div className="bg-white p-4 rounded shadow">
-                    <p className="font-medium mb-2">左眼</p>
-                    <img src={images.left} alt="左眼" className="w-24 h-24 object-contain" />
+            <div className="flex gap-8">
+              {/* 左眼预览 */}
+              {leftImages.length > 0 && (
+                <div className="flex-1">
+                  <h2 className="font-medium mb-4">左眼图片</h2>
+                  <div className="space-y-4">
+                    {leftImages.map((img, index) => (
+                      <div key={index} className="bg-white p-4 rounded shadow">
+                        <div className="flex gap-4 mb-4">
+                          <img src={img.url} alt={`左眼 ${index + 1}`} className="w-24 h-24 object-cover" />
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-500 mb-2">左眼图片 {index + 1}</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm w-12">宽度:</label>
+                                <input
+                                  type="number"
+                                  value={img.width}
+                                  onChange={(e) => handleSizeChange('left', index, 'width', e.target.value)}
+                                  className="w-20 px-2 py-1 border rounded text-sm"
+                                  min="1"
+                                  step="0.1"
+                                />
+                                <span className="text-sm text-gray-500">mm</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm w-12">高度:</label>
+                                <input
+                                  type="number"
+                                  value={img.height}
+                                  onChange={(e) => handleSizeChange('left', index, 'height', e.target.value)}
+                                  className="w-20 px-2 py-1 border rounded text-sm"
+                                  min="1"
+                                  step="0.1"
+                                />
+                                <span className="text-sm text-gray-500">mm</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveImage('left', index)}
+                            className="text-red-500 text-sm hover:text-red-600 self-start"
+                          >
+                            删除
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-                {images.right && (
-                  <div className="bg-white p-4 rounded shadow">
-                    <p className="font-medium mb-2">右眼</p>
-                    <img src={images.right} alt="右眼" className="w-24 h-24 object-contain" />
+                </div>
+              )}
+
+              {/* 右眼预览 */}
+              {rightImages.length > 0 && (
+                <div className="flex-1">
+                  <h2 className="font-medium mb-4">右眼图片</h2>
+                  <div className="space-y-4">
+                    {rightImages.map((img, index) => (
+                      <div key={index} className="bg-white p-4 rounded shadow">
+                        <div className="flex gap-4 mb-4">
+                          <img src={img.url} alt={`右眼 ${index + 1}`} className="w-24 h-24 object-cover" />
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-500 mb-2">右眼图片 {index + 1}</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm w-12">宽度:</label>
+                                <input
+                                  type="number"
+                                  value={img.width}
+                                  onChange={(e) => handleSizeChange('right', index, 'width', e.target.value)}
+                                  className="w-20 px-2 py-1 border rounded text-sm"
+                                  min="1"
+                                  step="0.1"
+                                />
+                                <span className="text-sm text-gray-500">mm</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm w-12">高度:</label>
+                                <input
+                                  type="number"
+                                  value={img.height}
+                                  onChange={(e) => handleSizeChange('right', index, 'height', e.target.value)}
+                                  className="w-20 px-2 py-1 border rounded text-sm"
+                                  min="1"
+                                  step="0.1"
+                                />
+                                <span className="text-sm text-gray-500">mm</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveImage('right', index)}
+                            className="text-red-500 text-sm hover:text-red-600 self-start"
+                          >
+                            删除
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* 空白的 A4 预览区域 */}
+        {/* A4 预览区域 */}
         <div className="bg-white w-[210mm] h-[297mm] mx-auto shadow-lg p-4">
           <div className="grid grid-cols-2 grid-rows-4 h-full gap-4">
-            {Array(8).fill(null).map((_, index) => (
-              <div key={index} className="border border-gray-200 flex items-center justify-center relative">
-                {imageArray[index % imageArray.length] && (
-                  <>
-                    <img
-                      src={imageArray[index % imageArray.length]}
-                      alt={`${index % 2 === 0 ? '左眼' : '右眼'}`}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                    <span className="absolute top-2 left-2 text-sm text-gray-500">
-                      {index % 2 === 0 ? '左眼' : '右眼'}
-                    </span>
-                  </>
-                )}
-              </div>
-            ))}
+            {Array(8).fill(null).map((_, index) => {
+              const isLeftPosition = index % 2 === 0
+              const images = isLeftPosition ? leftImages : rightImages
+              const imageIndex = Math.floor(index / 2) % images.length
+              const image = images[imageIndex]
+
+              return (
+                <div key={index} className="border border-gray-200 flex items-center justify-center relative">
+                  {image && (
+                    <>
+                      <img
+                        src={image.url}
+                        alt={`${isLeftPosition ? '左' : '右'}眼 ${imageIndex + 1}`}
+                        style={{
+                          width: `${image.width}mm`,
+                          height: `${image.height}mm`,
+                        }}
+                        className="object-fill"
+                      />
+                      <span className="absolute top-2 left-2 text-sm text-gray-500">
+                        {isLeftPosition ? '左' : '右'}眼 {imageIndex + 1}
+                        <br />
+                        <span className="text-xs">
+                          {image.width}×{image.height}mm
+                        </span>
+                      </span>
+                    </>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>

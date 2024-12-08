@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import html2canvas from 'html2canvas'
 
 interface ImageConfig {
   url: string;
@@ -38,8 +39,10 @@ const PAPER_CONFIGS: Record<PaperSize, PaperConfig> = {
 function App() {
   const [images, setImages] = useState<ImageState>({ left: [], right: [] })
   const [paperSize, setPaperSize] = useState<PaperSize>('A4')
+  const [dpi, setDpi] = useState<number>(300)
   const leftEyeInputRef = useRef<HTMLInputElement>(null)
   const rightEyeInputRef = useRef<HTMLInputElement>(null)
+  const printAreaRef = useRef<HTMLDivElement>(null)
 
   const handleImageUpload = (eye: 'left' | 'right', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -82,6 +85,29 @@ function App() {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleGeneratePNG = async () => {
+    if (!printAreaRef.current) return
+
+    const scale = dpi / 96 // 将 DPI 转换为缩放比例（96 是默认的屏幕 DPI）
+    
+    try {
+      const canvas = await html2canvas(printAreaRef.current, {
+        scale,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      })
+
+      // 创建下载链接
+      const link = document.createElement('a')
+      link.download = `print-${paperSize}-${dpi}dpi.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } catch (error) {
+      console.error('生成 PNG 时出错:', error)
+    }
   }
 
   const paperConfig = PAPER_CONFIGS[paperSize]
@@ -133,13 +159,32 @@ function App() {
                   <option value="A5">A5 (4张眼片)</option>
                 </select>
               </div>
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium">DPI:</label>
+                <input
+                  type="number"
+                  value={dpi}
+                  onChange={(e) => setDpi(Math.max(72, Math.min(1200, parseInt(e.target.value) || 300)))}
+                  className="border rounded px-2 py-1 w-20"
+                  min="72"
+                  max="1200"
+                />
+              </div>
               {(leftImages.length > 0 || rightImages.length > 0) && (
-                <button
-                  onClick={handlePrint}
-                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                >
-                  打印
-                </button>
+                <>
+                  <button
+                    onClick={handlePrint}
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  >
+                    打印
+                  </button>
+                  <button
+                    onClick={handleGeneratePNG}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    生成PNG
+                  </button>
+                </>
               )}
             </div>
 
@@ -251,10 +296,14 @@ function App() {
         </div>
 
         {/* A4 预览区域 */}
-        <div className={`bg-white mx-auto shadow-lg p-4`} style={{
-          width: `${paperConfig.width}mm`,
-          height: `${paperConfig.height}mm`
-        }}>
+        <div 
+          ref={printAreaRef}
+          className={`bg-white mx-auto shadow-lg p-4`} 
+          style={{
+            width: `${paperConfig.width}mm`,
+            height: `${paperConfig.height}mm`
+          }}
+        >
           <div className={`grid grid-cols-2 h-full gap-4`} style={{
             gridTemplateRows: `repeat(${paperConfig.gridRows}, 1fr)`
           }}>
